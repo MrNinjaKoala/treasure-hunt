@@ -445,8 +445,6 @@ function rScan({ icon, ic='', ttl, tc='', tagId, team, clue, pen=0, timer }) {
   if(pen){document.getElementById('pen-secs').textContent=pen;pEl.style.display='';}else pEl.style.display='none';
   document.getElementById('s-timer').style.display =timer?'':'none';
   document.getElementById('s-tlabel').style.display=timer?'':'none';
-  document.getElementById('s-acts').innerHTML=
-    `<button class="btn btn-ghost" onclick="goDash()">📋 Host Dashboard</button>`;
 }
 
 function startTick() {
