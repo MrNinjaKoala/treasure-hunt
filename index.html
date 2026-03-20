@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Treasure Hunt</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+–ink: #1a1208;
+–paper: #fdf6e3;
+–paper2: #f5ead0;
+–paper3: #ecdfc0;
+–gold: #c8860a;
+–gold-light: #e8a820;
+–red: #b03020;
+–green: #2a7040;
+–blue: #1a4a80;
+–border: #c8a870;
+–muted: #8a7050;
+–ff-display: ‘Archivo Black’, sans-serif;
+–ff-body: ‘Archivo’, sans-serif;
+–ff-mono: ‘Courier Prime’, monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(–paper);color:var(–ink);font-family:var(–ff-body);}
+
+body::before{
+content:’’;position:fixed;inset:0;pointer-events:none;z-index:0;
+background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘200’ height=‘200’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.75’ numOctaves=‘3’ stitchTiles=‘stitch’/%3E%3CfeColorMatrix type=‘saturate’ values=‘0’/%3E%3C/filter%3E%3Crect width=‘200’ height=‘200’ filter=‘url(%23n)’ opacity=‘0.05’/%3E%3C/svg%3E”);
+}
+
+.screen{display:none;flex-direction:column;min-height:100vh;position:relative;z-index:1;}
+.screen.active{display:flex;}
+
+.stamp{
+display:inline-flex;align-items:center;gap:5px;
+padding:3px 10px;border-radius:2px;
+font-family:var(–ff-mono);font-size:11px;font-weight:700;
+letter-spacing:1.5px;text-transform:uppercase;
+border:2px solid currentColor;flex-shrink:0;
+}
+.s-trail{color:var(–gold);border-color:var(–gold);}
+.s-start{color:var(–blue);border-color:var(–blue);}
+.s-finish{color:var(–green);border-color:var(–green);}
+.s-red{color:var(–red);border-color:var(–red);}
+
+.btn{
+display:inline-flex;align-items:center;justify-content:center;gap:8px;
+padding:13px 24px;border:2px solid var(–ink);border-radius:2px;
+font-family:var(–ff-body);font-size:15px;font-weight:600;
+cursor:pointer;transition:all .1s;background:transparent;color:var(–ink);
+}
+.btn:active{transform:translate(2px,2px);}
+.btn-primary{background:var(–ink);color:var(–paper);}
+.btn-gold{background:var(–gold);color:var(–paper);border-color:var(–gold);}
+.btn-red-outline{border-color:var(–red);color:var(–red);background:transparent;}
+.btn-ghost{border-color:var(–border);color:var(–muted);}
+.btn-ghost:hover{border-color:var(–ink);color:var(–ink);}
+.btn-sm{padding:8px 16px;font-size:13px;}
+.btn-green{background:var(–green);color:var(–paper);border-color:var(–green);}
+
+input,select{
+background:var(–paper);border:2px solid var(–border);border-radius:2px;
+color:var(–ink);font-family:var(–ff-body);font-size:14px;
+padding:9px 12px;width:100%;outline:none;transition:border-color .15s;
+}
+input:focus,select:focus{border-color:var(–gold);}
+label{font-size:11px;font-family:var(–ff-mono);letter-spacing:1.5px;
+text-transform:uppercase;color:var(–muted);display:block;margin-bottom:5px;}
+
+.card{
+background:var(–paper2);border:2px solid var(–border);
+border-radius:2px;padding:18px 20px;
+box-shadow:3px 3px 0 var(–border);
+}
+
+/* ── SETUP ── */
+.masthead{
+text-align:center;padding:32px 20px 18px;
+border-bottom:3px double var(–ink);
+}
+.mast-eye{font-family:var(–ff-mono);font-size:11px;letter-spacing:4px;color:var(–muted);margin-bottom:8px;}
+.mast-title{font-family:var(–ff-display);font-size:clamp(38px,11vw,68px);line-height:.95;color:var(–ink);}
+.mast-title em{color:var(–gold);font-style:normal;}
+.mast-sub{font-size:13px;color:var(–muted);margin-top:8px;font-style:italic;}
+
+.snav{display:flex;border-bottom:2px solid var(–border);overflow-x:auto;background:var(–paper2);}
+.snav-t{
+padding:11px 16px;font-size:12px;font-family:var(–ff-mono);
+letter-spacing:1px;text-transform:uppercase;color:var(–muted);
+cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;
+margin-bottom:-2px;transition:all .12s;
+}
+.snav-t.on{color:var(–gold);border-bottom-color:var(–gold);}
+
+.sp{display:none;padding:20px;flex:1;}
+.sp.on{display:block;}
+
+.sec-label{
+font-family:var(–ff-mono);font-size:11px;letter-spacing:2px;
+text-transform:uppercase;color:var(–muted);
+display:flex;align-items:center;gap:8px;margin-bottom:14px;
+}
+.sec-label::before,.sec-label::after{content:’’;flex:1;height:1px;background:var(–border);}
+
+.team-block{
+background:var(–paper2);border:2px solid var(–border);
+padding:14px 16px;margin-bottom:10px;border-radius:2px;
+box-shadow:2px 2px 0 var(–border);
+}
+.team-stripe{height:4px;border-radius:1px;margin-bottom:12px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.tag-row{
+display:flex;align-items:center;gap:8px;
+padding:9px 10px;background:var(–paper);border:1px solid var(–border);
+border-radius:2px;margin-bottom:7px;
+}
+.tag-num{font-family:var(–ff-mono);font-size:13px;color:var(–muted);width:22px;text-align:center;flex-shrink:0;}
+
+.url-box{
+background:var(–paper3);border:1px solid var(–border);
+padding:10px 12px;font-family:var(–ff-mono);font-size:12px;
+color:var(–muted);word-break:break-all;margin-top:6px;border-radius:2px;
+}
+.url-box strong{color:var(–gold);}
+
+.hint{
+background:var(–paper2);border-left:4px solid var(–gold);
+padding:11px 13px;font-size:13px;color:var(–muted);line-height:1.7;
+}
+.hint strong{color:var(–ink);}
+
+.setup-foot{
+padding:18px 20px;border-top:2px solid var(–border);
+display:flex;gap:10px;justify-content:flex-end;
+background:var(–paper2);flex-wrap:wrap;
+}
+
+/* ── PLAYER SCAN ── */
+.ps{
+flex:1;display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+padding:28px 22px;text-align:center;gap:18px;
+}
+.ps-eye{font-family:var(–ff-mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(–muted);}
+.ps-icon{font-size:68px;line-height:1;}
+.ps-icon.bounce{animation:bounce .7s ease-in-out infinite alternate;}
+.ps-icon.shake{animation:shake .45s ease;}
+.ps-icon.spin{animation:spin .55s ease;}
+@keyframes bounce{from{transform:translateY(0);}to{transform:translateY(-13px);}}
+@keyframes shake{0%,100%{transform:rotate(0);}30%{transform:rotate(-9deg);}70%{transform:rotate(9deg);}}
+@keyframes spin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+
+.ps-title{font-family:var(–ff-display);font-size:clamp(34px,10vw,58px);line-height:1;color:var(–ink);}
+.ps-title.gold{color:var(–gold);}
+.ps-title.red{color:var(–red);}
+.ps-title.green{color:var(–green);}
+.ps-team{font-family:var(–ff-mono);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(–muted);}
+.ps-clue{
+background:var(–paper2);border:2px solid var(–border);
+padding:16px 20px;max-width:400px;width:100%;
+font-size:16px;line-height:1.65;box-shadow:3px 3px 0 var(–border);border-radius:2px;
+}
+.ps-timer{font-family:var(–ff-mono);font-size:clamp(44px,13vw,68px);color:var(–gold);letter-spacing:3px;line-height:1;}
+.ps-tlabel{font-family:var(–ff-mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(–muted);margin-top:-6px;}
+.pen-banner{
+background:var(–red);color:var(–paper);border-radius:2px;
+padding:13px 22px;max-width:400px;width:100%;
+font-family:var(–ff-display);font-size:20px;letter-spacing:2px;
+text-align:center;display:none;animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.ps-acts{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+
+/* ── FINISH ── */
+#finish-screen{background:radial-gradient(ellipse at 50% 20%,#fffbe8,var(–paper) 65%);}
+.fi{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 22px;text-align:center;gap:14px;}
+.fi-trophy{font-size:76px;animation:bounce .65s ease-in-out infinite alternate;}
+.fi-title{font-family:var(–ff-display);font-size:clamp(42px,12vw,76px);color:var(–gold);line-height:1;letter-spacing:-1px;}
+.fi-sub{font-family:var(–ff-mono);font-size:12px;letter-spacing:2px;color:var(–muted);}
+.fi-total{font-family:var(–ff-mono);font-size:clamp(42px,12vw,60px);color:var(–ink);letter-spacing:3px;line-height:1;}
+.fi-card{
+background:var(–paper2);border:3px solid var(–ink);
+padding:18px 22px;max-width:340px;width:100%;
+box-shadow:5px 5px 0 var(–ink);text-align:left;border-radius:2px;
+}
+.fi-row{
+display:flex;justify-content:space-between;align-items:center;
+padding:7px 0;border-bottom:1px dashed var(–border);font-size:14px;
+}
+.fi-row:last-child{border-bottom:none;margin-top:4px;padding-top:10px;}
+.fi-label{color:var(–muted);}
+.fi-val{font-family:var(–ff-mono);font-weight:700;}
+.fi-val.r{color:var(–red);}
+.fi-val.g{color:var(–green);}
+.fi-val.big{color:var(–gold);font-size:20px;}
+.code-box{
+background:var(–ink);color:var(–paper);
+padding:16px 20px;max-width:340px;width:100%;text-align:center;border-radius:2px;
+}
+.code-lbl{font-family:var(–ff-mono);font-size:10px;letter-spacing:3px;color:var(–muted);margin-bottom:7px;}
+.code-val{font-family:var(–ff-mono);font-size:28px;letter-spacing:6px;color:var(–gold-light);}
+.code-hint{font-size:12px;color:var(–muted);margin-top:5px;}
+
+/* ── DASHBOARD ── */
+#dashboard-screen{background:var(–paper);}
+.dh{padding:16px 18px;border-bottom:3px solid var(–ink);display:flex;align-items:center;justify-content:space-between;background:var(–paper2);}
+.dh-logo{font-family:var(–ff-display);font-size:22px;}
+.dh-logo span{color:var(–gold);}
+.dtabs{display:flex;border-bottom:2px solid var(–border);background:var(–paper2);}
+.dtab{
+padding:10px 16px;font-family:var(–ff-mono);font-size:12px;
+letter-spacing:1px;text-transform:uppercase;color:var(–muted);
+cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;
+}
+.dtab.on{color:var(–gold);border-bottom-color:var(–gold);}
+.dp{display:none;padding:18px;overflow-y:auto;}
+.dp.on{display:block;}
+
+.dtc{
+background:var(–paper2);border:2px solid var(–border);
+margin-bottom:12px;border-radius:2px;box-shadow:2px 2px 0 var(–border);
+overflow:hidden;
+}
+.dtc.done{border-color:var(–green);box-shadow:2px 2px 0 var(–green);}
+.dtc-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;cursor:pointer;}
+.dtc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-right:10px;}
+.dtc-name{font-weight:600;font-size:15px;}
+.dtc-meta{font-size:11px;color:var(–muted);font-family:var(–ff-mono);margin-top:2px;}
+.dtc-time{font-family:var(–ff-mono);font-size:22px;color:var(–muted);}
+.dtc-time.done{color:var(–green);}
+.dtc-body{display:none;padding:12px 15px;border-top:1px dashed var(–border);background:var(–paper);}
+.dtc.open .dtc-body{display:block;}
+.two-col-sm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(–border);}
+.lb-pos{font-family:var(–ff-display);font-size:30px;color:var(–border);width:38px;text-align:center;flex-shrink:0;}
+.lb-pos.p1{color:#c8860a;}.lb-pos.p2{color:#888;}.lb-pos.p3{color:#a07040;}
+.lb-nm{flex:1;}
+.lb-name{font-weight:600;font-size:15px;}
+.lb-meta{font-family:var(–ff-mono);font-size:11px;color:var(–muted);margin-top:2px;}
+.lb-t{font-family:var(–ff-mono);font-size:22px;color:var(–gold);}
+.empty{text-align:center;padding:36px;color:var(–muted);font-style:italic;font-size:14px;}
+
+.mt6{margin-top:6px;}.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}.mt24{margin-top:24px;}
+.flex{display:flex;}.gap8{gap:8px;}.gap10{gap:10px;}
+.items-center{align-items:center;}.jb{justify-content:space-between;}
+.text-muted{color:var(–muted);}.text-sm{font-size:13px;}
+.w100{width:100%;}
+</style>
+
+</head>
+<body>
+
+<!-- ══ SETUP ══ -->
+
+<div id="setup-screen" class="screen active">
+  <div class="masthead">
+    <div class="mast-eye">NFC Treasure Hunt — Configuration</div>
+    <div class="mast-title">THE GREAT<br><em>HUNT</em></div>
+    <div class="mast-sub">Set up once. Hunt many times.</div>
+  </div>
+
+  <div class="snav" id="snav">
+    <div class="snav-t on"  onclick="stab(0)">① Teams</div>
+    <div class="snav-t"     onclick="stab(1)">② Tags</div>
+    <div class="snav-t"     onclick="stab(2)">③ Clues</div>
+    <div class="snav-t"     onclick="stab(3)">④ Settings</div>
+    <div class="snav-t"     onclick="stab(4)">⑤ Tag URLs</div>
+  </div>
+
+  <div id="sp0" class="sp on">
+    <div class="sec-label">Teams</div>
+    <div id="teams-ui"></div>
+    <div class="hint mt12">
+      Each team gets a <strong>unique start tag</strong> programmed just for them. This identifies which team is playing on a device. All other tags are shared.
+    </div>
+  </div>
+
+  <div id="sp1" class="sp">
+    <div class="sec-label">Trail Tags (in order)</div>
+    <div class="hint mt8">Add tags in the order teams should find them. The <strong>last tag = finish line</strong>. Teams can skip intermediate tags if they find the finish directly.</div>
+    <div id="trail-ui" class="mt14"></div>
+    <button class="btn btn-ghost btn-sm mt12" onclick="addTrail()">+ Add Trail Tag</button>
+    <div class="sec-label mt20">Red Herring Tags</div>
+    <div class="hint mt8">Scattered around the house. Scanning one adds <strong id="pen-hint">60 seconds</strong> to the team's time.</div>
+    <div id="red-ui" class="mt12"></div>
+    <button class="btn btn-ghost btn-sm mt12" onclick="addRed()">+ Add Red Herring</button>
+  </div>
+
+  <div id="sp2" class="sp">
+    <div class="sec-label">Clues</div>
+    <div class="hint mt8">Text shown on the team's phone after each scan. Leave blank for a default message.</div>
+    <div id="clues-ui" class="mt16"></div>
+  </div>
+
+  <div id="sp3" class="sp">
+    <div class="sec-label">Penalty Duration</div>
+    <div style="max-width:240px">
+      <label>Seconds per red herring</label>
+      <input type="number" id="pen-input" value="60" min="5" max="3600"
+        oninput="S.penaltySeconds=parseInt(this.value)||60;document.getElementById('pen-hint').textContent=S.penaltySeconds+'s'">
+    </div>
+    <div class="sec-label mt24">Hosted URL</div>
+    <div class="hint mt8">Host this file on <strong>GitHub Pages</strong> (free) or any web host. Paste your URL here to generate NFC tag links.</div>
+    <div class="mt12">
+      <label>Your URL (no trailing slash)</label>
+      <input type="text" id="url-input" placeholder="https://yourname.github.io/hunt" oninput="S.baseUrl=this.value.trim()">
+    </div>
+    <div class="sec-label mt24">Multi-Device Scoring</div>
+    <div class="hint mt8">
+      Each team plays on their own phone — scores are local. When a team finishes, they see a <strong>Result Code</strong>.
+      The host types this into the <strong>Dashboard</strong> to record the score and build the leaderboard.
+    </div>
+  </div>
+
+  <div id="sp4" class="sp">
+    <div class="sec-label">URLs to Write to NFC Tags</div>
+    <div class="hint mt8">Use a free NFC writer app (NFC Tools, TagWriter). Write each URL to its matching sticker. Tapping the sticker opens this page with the right tag loaded.</div>
+    <div id="urls-ui" class="mt16"></div>
+  </div>
+
+  <div class="setup-foot">
+    <button class="btn btn-ghost" onclick="goDash()">📋 Dashboard</button>
+    <button class="btn btn-primary" onclick="doSave()">Save Setup ✓</button>
+  </div>
+</div>
+
+<!-- ══ SCAN SCREEN ══ -->
+
+<div id="scan-screen" class="screen">
+  <div class="ps">
+    <div class="ps-eye" id="s-tagid"></div>
+    <div class="ps-icon" id="s-icon">🔍</div>
+    <div class="ps-title" id="s-title">—</div>
+    <div class="ps-team"  id="s-team"></div>
+    <div class="ps-clue"  id="s-clue" style="display:none"></div>
+    <div class="pen-banner" id="pen-banner">⏱ +<span id="pen-secs"></span>s PENALTY!</div>
+    <div class="ps-timer"  id="s-timer"  style="display:none">00:00</div>
+    <div class="ps-tlabel" id="s-tlabel" style="display:none">TIME + PENALTIES</div>
+    <div class="ps-acts"   id="s-acts"></div>
+  </div>
+</div>
+
+<!-- ══ FINISH SCREEN ══ -->
+
+<div id="finish-screen" class="screen">
+  <div class="fi">
+    <div class="fi-trophy">🏆</div>
+    <div class="fi-title">YOU'RE DONE!</div>
+    <div class="fi-sub"   id="f-team">—</div>
+    <div class="fi-total" id="f-total">00:00</div>
+    <div class="fi-card"  id="f-breakdown"></div>
+    <div class="code-box">
+      <div class="code-lbl">Result Code — Read to Host</div>
+      <div class="code-val" id="f-code">——</div>
+      <div class="code-hint">The host enters this in the Dashboard to record your score</div>
+    </div>
+    <div class="ps-acts">
+      <button class="btn btn-ghost btn-sm" onclick="goDash()">I'm the host →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+
+<div id="dashboard-screen" class="screen">
+  <div class="dh">
+    <div class="dh-logo">HUNT <span>HQ</span></div>
+    <div class="flex gap8">
+      <button class="btn btn-ghost btn-sm" onclick="goSetup()">⚙ Setup</button>
+      <button class="btn btn-red-outline btn-sm" onclick="clearAll()">Reset</button>
+    </div>
+  </div>
+  <div class="dtabs">
+    <div class="dtab on" onclick="dtab(0)">Enter Scores</div>
+    <div class="dtab"    onclick="dtab(1)">Leaderboard</div>
+  </div>
+  <div id="dp0" class="dp on">
+    <div class="sec-label">Record Team Results</div>
+    <p class="text-sm text-muted" style="margin-bottom:14px;line-height:1.65">
+      When a team finishes they'll see a <strong>Result Code</strong> on screen. Paste it below, or enter times manually.
+    </p>
+    <div id="score-ui"></div>
+  </div>
+  <div id="dp1" class="dp">
+    <div class="sec-label">Leaderboard</div>
+    <div id="lb-ui"></div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+const SK = 'hunt_v4';
+const defaultS = () => ({
+  teams:[
+    {name:'Team Alpha',  startTag:'start-a', color:'#c8860a'},
+    {name:'Team Bravo',  startTag:'start-b', color:'#1a4a80'},
+    {name:'Team Charlie',startTag:'start-c', color:'#2a7040'},
+    {name:'Team Delta',  startTag:'start-d', color:'#b03020'},
+  ],
+  trailTags:['trail-1','trail-2','trail-3','trail-4','trail-5'],
+  redTags:['red-1','red-2','red-3'],
+  penaltySeconds:60,
+  baseUrl:'',
+  clues:{},
+  scores:[null,null,null,null]
+});
+
+let S = (() => { try { const s=localStorage.getItem(SK); if(s) return JSON.parse(s); } catch(e){} return defaultS(); })();
+const save = () => localStorage.setItem(SK, JSON.stringify(S));
+
+// ── ROUTING ──
+const gp = k => new URLSearchParams(location.search).get(k);
+window.addEventListener('load', () => {
+  const tag=gp('tag'), host=gp('host');
+  if (tag) handleScan(tag);
+  else if (host==='1') goDash();
+  else { renderSetup(); show('setup-screen'); }
+});
+
+// ── SCREENS ──
+const show = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
+const goSetup = () => { renderSetup(); show('setup-screen'); };
+const goDash  = () => { renderDash(); show('dashboard-screen'); };
+
+// ── SETUP TABS ──
+function stab(i) {
+  document.querySelectorAll('.snav-t').forEach((t,j)=>t.classList.toggle('on',i===j));
+  document.querySelectorAll('.sp').forEach((p,j)=>p.classList.toggle('on',i===j));
+  if(i===4) renderUrls();
+  if(i===2) renderClues();
+}
+function dtab(i) {
+  document.querySelectorAll('.dtab').forEach((t,j)=>t.classList.toggle('on',i===j));
+  document.querySelectorAll('.dp').forEach((p,j)=>p.classList.toggle('on',i===j));
+  if(i===1) renderLb();
+}
+
+// ── SETUP RENDER ──
+function renderSetup() {
+  document.getElementById('pen-input').value = S.penaltySeconds;
+  document.getElementById('url-input').value = S.baseUrl;
+  document.getElementById('pen-hint').textContent = S.penaltySeconds+'s';
+  rTeams(); rTrail(); rRed();
+}
+function rTeams() {
+  document.getElementById('teams-ui').innerHTML = S.teams.map((t,i)=>`
+    <div class="team-block">
+      <div class="team-stripe" style="background:${t.color}"></div>
+      <div class="two-col">
+        <div><label>Team Name</label><input value="${esc(t.name)}" oninput="S.teams[${i}].name=this.value"></div>
+        <div><label>Start Tag ID</label><input value="${esc(t.startTag)}" style="font-family:var(--ff-mono)" oninput="S.teams[${i}].startTag=this.value.trim()"></div>
+      </div>
+    </div>`).join('');
+}
+function rTrail() {
+  document.getElementById('trail-ui').innerHTML = S.trailTags.map((tag,i)=>{
+    const fin = i===S.trailTags.length-1;
+    return `<div class="tag-row">
+      <span class="tag-num">${i+1}</span>
+      <input value="${esc(tag)}" style="font-family:var(--ff-mono);flex:1" oninput="S.trailTags[${i}]=this.value.trim()">
+      <span class="stamp ${fin?'s-finish':'s-trail'}">${fin?'FINISH':'TRAIL'}</span>
+      <button class="btn btn-ghost btn-sm" onclick="S.trailTags.splice(${i},1);rTrail()">✕</button>
+    </div>`;}).join('');
+}
+function rRed() {
+  document.getElementById('red-ui').innerHTML = S.redTags.map((tag,i)=>`
+    <div class="tag-row">
+      <input value="${esc(tag)}" style="font-family:var(--ff-mono);flex:1" oninput="S.redTags[${i}]=this.value.trim()">
+      <span class="stamp s-red">RED</span>
+      <button class="btn btn-ghost btn-sm" onclick="S.redTags.splice(${i},1);rRed()">✕</button>
+    </div>`).join('');
+}
+function renderClues() {
+  const rows = [
+    ...S.teams.map((t,i)=>({key:t.startTag, label:`▶ START: ${t.name}`, hint:'Message when this team starts'})),
+    ...S.trailTags.map((tag,i)=>({key:tag, label:i===S.trailTags.length-1?`🏁 FINISH: ${tag}`:`Trail ${i+1}: ${tag}`, hint:i===S.trailTags.length-1?'Shown on completion screen':'Clue to next tag'}))
+  ];
+  document.getElementById('clues-ui').innerHTML = rows.map(r=>`
+    <div class="mt12">
+      <label>${esc(r.label)}</label>
+      <input placeholder="${esc(r.hint)}" value="${esc(S.clues[r.key]||'')}" oninput="S.clues['${r.key}']=this.value">
+    </div>`).join('');
+}
+function renderUrls() {
+  const base = S.baseUrl||'[YOUR-URL]';
+  const rows = [
+    ...S.teams.map(t=>({label:`START — ${t.name}`, tag:t.startTag, type:'start'})),
+    ...S.trailTags.map((tag,i)=>({label:i===S.trailTags.length-1?'FINISH':tag, tag, type:i===S.trailTags.length-1?'finish':'trail'})),
+    ...S.redTags.map(tag=>({label:`Red Herring — ${tag}`, tag, type:'red'}))
+  ];
+  document.getElementById('urls-ui').innerHTML = rows.map(r=>`
+    <div class="card mt8">
+      <div class="flex items-center jb gap8">
+        <span class="stamp s-${r.type==='finish'?'finish':r.type==='start'?'start':r.type==='trail'?'trail':'red'}">${r.type.toUpperCase()}</span>
+        <span style="font-weight:600;font-size:13px;flex:1">${esc(r.label)}</span>
+        <button class="btn btn-ghost btn-sm" onclick="cp('${base}?tag=${r.tag}')">Copy</button>
+      </div>
+      <div class="url-box"><strong>${esc(base)}?tag=</strong>${esc(r.tag)}</div>
+    </div>`).join('');
+}
+function addTrail() { S.trailTags.push('trail-'+(S.trailTags.length+1)); rTrail(); }
+function addRed()   { S.redTags.push('red-'+(S.redTags.length+1));       rRed(); }
+function doSave()   { save(); alert('Saved! Go to Tag URLs to get your NFC links.'); }
+
+// ── SCAN LOGIC ──
+let _run = null, _tick = null;
+
+function handleScan(tagId) {
+  clearInterval(_tick);
+  const ti  = S.teams.findIndex(t=>t.startTag===tagId);
+  const tri = S.trailTags.indexOf(tagId);
+  const isR = S.redTags.includes(tagId);
+  const isFin = tri===S.trailTags.length-1 && tri>=0;
+
+  if (ti !== -1) {
+    _run = {teamIdx:ti, startMs:Date.now(), penSecs:0, penCount:0, hits:0};
+    rScan({icon:'🚀',ic:'spin',ttl:'HUNT STARTS NOW',tc:'gold',tagId, team:'▶ '+S.teams[ti].name,
+      clue:S.clues[tagId]||'Your adventure begins! Hunt for the next NFC tag…', timer:true});
+    startTick(); return;
+  }
+  if (!_run) {
+    rScan({icon:'⚠️',ttl:'NOT STARTED',tagId,team:'No active run — scan your start tag first',
+      clue:"Ask the host for your team's unique start tag.",timer:false}); show('scan-screen'); return;
+  }
+  if (isR) {
+    _run.penSecs += S.penaltySeconds; _run.penCount++;
+    rScan({icon:'🚨',ic:'shake',ttl:'WRONG TAG!',tc:'red',tagId, team:S.teams[_run.teamIdx].name,
+      clue:'That\'s a decoy! Keep searching…', pen:S.penaltySeconds, timer:true});
+    startTick(); return;
+  }
+  if (isFin) {
+    const rawSecs = Math.floor((Date.now()-_run.startMs)/1000);
+    const run = {rawSecs, penSecs:_run.penSecs, penCount:_run.penCount, hits:_run.hits+1};
+    showFin(_run.teamIdx, run); _run=null; return;
+  }
+  if (tri !== -1) {
+    _run.hits++;
+    rScan({icon:'✅',ttl:'FOUND IT!',tc:'green',tagId,team:S.teams[_run.teamIdx].name,
+      clue:S.clues[tagId]||'Good find! Keep going — the next tag awaits…', timer:true});
+    startTick(); return;
+  }
+  rScan({icon:'❓',ttl:'UNKNOWN TAG',tagId,team:`Tag "${tagId}" not configured`,
+    clue:'This tag ID isn\'t in the hunt. Check the setup.',timer:false});
+}
+
+function rScan({icon,ic='',ttl,tc='',tagId,team,clue,pen=0,timer}) {
+  show('scan-screen');
+  document.getElementById('s-tagid').textContent = tagId?'TAG: '+tagId:'';
+  const iEl=document.getElementById('s-icon');
+  iEl.textContent=icon; iEl.className='ps-icon'+(ic?' '+ic:'');
+  const tEl=document.getElementById('s-title');
+  tEl.textContent=ttl; tEl.className='ps-title'+(tc?' '+tc:'');
+  document.getElementById('s-team').textContent=team;
+  const cEl=document.getElementById('s-clue');
+  if(clue){cEl.textContent=clue;cEl.style.display='';}else cEl.style.display='none';
+  const pEl=document.getElementById('pen-banner');
+  if(pen){document.getElementById('pen-secs').textContent=pen;pEl.style.display='';}else pEl.style.display='none';
+  document.getElementById('s-timer').style.display=timer?'':'none';
+  document.getElementById('s-tlabel').style.display=timer?'':'none';
+  document.getElementById('s-acts').innerHTML=`<button class="btn btn-ghost" onclick="goDash()">📋 Dashboard</button>`;
+}
+
+function startTick() {
+  clearInterval(_tick);
+  const tick=()=>{
+    if(!_run)return;
+    const e=Math.floor((Date.now()-_run.startMs)/1000)+_run.penSecs;
+    document.getElementById('s-timer').textContent=fmt(e);
+  };
+  tick(); _tick=setInterval(tick,1000);
+}
+
+// ── FINISH ──
+function showFin(ti, run) {
+  clearInterval(_tick);
+  const total=run.rawSecs+run.penSecs;
+  document.getElementById('f-team').textContent=S.teams[ti].name;
+  document.getElementById('f-total').textContent=fmt(total);
+  document.getElementById('f-breakdown').innerHTML=`
+    <div class="fi-row"><span class="fi-label">Race time</span><span class="fi-val g">${fmt(run.rawSecs)}</span></div>
+    <div class="fi-row"><span class="fi-label">Penalties (${run.penCount}×)</span><span class="fi-val r">+${fmt(run.penSecs)}</span></div>
+    <div class="fi-row"><span class="fi-label">Tags found</span><span class="fi-val">${run.hits}</span></div>
+    <div class="fi-row"><span class="fi-label" style="font-weight:700;color:var(--ink)">TOTAL</span><span class="fi-val big">${fmt(total)}</span></div>`;
+  document.getElementById('f-code').textContent=encR(ti,run);
+  show('finish-screen');
+}
+
+const encR=(ti,run)=>`T${ti}${(run.rawSecs+run.penSecs).toString(36).toUpperCase()}P${run.penCount}`;
+function decR(code) {
+  const m=code.trim().toUpperCase().match(/^T(\d)([0-9A-Z]+)P(\d+)$/);
+  if(!m)return null;
+  const ti=parseInt(m[1]), total=parseInt(m[2],36), pc=parseInt(m[3]);
+  const penSecs=pc*S.penaltySeconds;
+  return {ti, total, rawSecs:total-penSecs, penSecs, pc};
+}
+
+// ── DASHBOARD ──
+function renderDash() { rScores(); }
+function rScores() {
+  document.getElementById('score-ui').innerHTML = S.teams.map((t,i)=>{
+    const sc=S.scores[i], done=sc!==null;
+    return `<div class="dtc ${done?'done':''}" id="dtc${i}">
+      <div class="dtc-head" onclick="tog(${i})">
+        <div class="flex items-center" style="flex:1">
+          <div class="dtc-dot" style="background:${t.color}"></div>
+          <div>
+            <div class="dtc-name">${esc(t.name)}</div>
+            <div class="dtc-meta">${done?`Total: ${fmt(sc.total)} · ${sc.pc} penalty`:'Not recorded yet'}</div>
+          </div>
+        </div>
+        <div class="dtc-time ${done?'done':''}">${done?fmt(sc.total):'—'}</div>
+      </div>
+      <div class="dtc-body" id="body${i}">
+        <label>Paste Result Code</label>
+        <div class="flex gap8 mt6">
+          <input id="ci${i}" placeholder="e.g. T0ABCP2" style="font-family:var(--ff-mono);letter-spacing:2px">
+          <button class="btn btn-gold btn-sm" onclick="applyCode(${i})">Apply</button>
+        </div>
+        <div style="text-align:center;color:var(--muted);font-size:12px;margin:10px 0">— or enter manually —</div>
+        <div class="two-col-sm">
+          <div><label>Total Time (mm:ss)</label><input id="mt${i}" placeholder="05:42" value="${done?fmt(sc.total):''}"></div>
+          <div><label>Penalty count</label><input type="number" id="mp${i}" min="0" placeholder="0" value="${done?sc.pc:''}"></div>
+        </div>
+        <div class="flex gap8 mt8" style="justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="clrScore(${i})">Clear</button>
+          <button class="btn btn-primary btn-sm" onclick="saveMan(${i})">Save</button>
+        </div>
+      </div>
+    </div>`;}).join('');
+}
+function tog(i) { document.getElementById('dtc'+i).classList.toggle('open'); }
+function applyCode(i) {
+  const r=decR(document.getElementById('ci'+i).value);
+  if(!r){alert('Invalid code — ask the team to read it again.');return;}
+  if(r.ti!==i && !confirm(`Code is for ${S.teams[r.ti]?.name||r.ti}, not ${S.teams[i].name}. Apply anyway?`)) return;
+  S.scores[i]={total:r.total,rawSecs:r.rawSecs,penSecs:r.penSecs,pc:r.pc};
+  save(); rScores();
+}
+function saveMan(i) {
+  const t=parseTm(document.getElementById('mt'+i).value);
+  if(t<0){alert('Enter time as mm:ss');return;}
+  const pc=parseInt(document.getElementById('mp'+i).value)||0;
+  const penSecs=pc*S.penaltySeconds;
+  S.scores[i]={total:t,rawSecs:t-penSecs,penSecs,pc};
+  save(); rScores(); document.getElementById('dtc'+i).classList.remove('open');
+}
+function clrScore(i){S.scores[i]=null;save();rScores();}
+function clearAll(){if(!confirm('Clear all scores?'))return;S.scores=[null,null,null,null];save();rScores();}
+
+function renderLb() {
+  const done=S.scores.map((sc,i)=>sc?{...sc,name:S.teams[i].name,color:S.teams[i].color}:null)
+    .filter(Boolean).sort((a,b)=>a.total-b.total);
+  const el=document.getElementById('lb-ui');
+  if(!done.length){el.innerHTML='<div class="empty">No scores recorded yet.</div>';return;}
+  const pc=['p1','p2','p3'];
+  el.innerHTML=done.map((t,i)=>`
+    <div class="lb-row">
+      <div class="lb-pos ${pc[i]||''}">${i+1}</div>
+      <div class="lb-nm">
+        <div class="lb-name" style="display:flex;align-items:center;gap:7px">
+          <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.color}"></span>${esc(t.name)}
+        </div>
+        <div class="lb-meta">Race ${fmt(t.rawSecs)} + Penalties ${fmt(t.penSecs)} (${t.pc}×)</div>
+      </div>
+      <div class="lb-t">${fmt(t.total)}</div>
+    </div>`).join('');
+  const waiting=S.scores.map((sc,i)=>sc?null:S.teams[i].name).filter(Boolean);
+  if(waiting.length) el.innerHTML+=`<div class="text-sm text-muted mt12" style="font-style:italic">Waiting: ${waiting.map(esc).join(', ')}</div>`;
+}
+
+// ── UTILS ──
+const fmt=s=>{const v=Math.max(0,Math.round(s)),m=Math.floor(v/60),h=Math.floor(m/60);return h>0?`${h}:${pad(m%60)}:${pad(v%60)}`:`${pad(m)}:${pad(v%60)}`;};
+const pad=n=>String(n).padStart(2,'0');
+const parseTm=s=>{const m=s.match(/^(\d+):(\d{1,2})$/);return m?parseInt(m[1])*60+parseInt(m[2]):-1;};
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const cp=t=>navigator.clipboard.writeText(t).then(()=>alert('Copied!')).catch(()=>prompt('Copy:',t));
+</script>
+
+</body>
+</html>
