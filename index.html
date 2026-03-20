@@ -383,7 +383,7 @@ let CFG = null; // populated after fetch
 async function loadConfig() {
   setLoadMsg('Loading config.yaml…');
   try {
-    const res = await fetch('config.yaml?nocache=' + Date.now());
+    const res = await fetch('./config.yaml?nocache=' + Date.now());
     if (!res.ok) throw new Error(`HTTP ${res.status} — make sure config.yaml is in the same folder as index.html`);
     const text = await res.text();
     CFG = parseYaml(text);
@@ -739,7 +739,7 @@ function renderLb() {
 }
 
 function renderUrls() {
-  const base = location.origin + location.pathname.replace(/\/[^/]*$/, '');
+  const base = location.href.split('?')[0].replace(/\/$/, '');
   const rows = [
     ...CFG.teams.map(t => ({ label:`START — ${t.name}`, tag: t.start_tag, type:'start' })),
     ...CFG.trail_tags.map((t,i) => {
