@@ -14,30 +14,34 @@
 -->
 <script id="hunt-config" type="application/json">
 {
-  "penalty_seconds": 60,
+  "penalty_seconds": 120,
 
   "teams": [
-    { "name": "Team Alpha",   "start_tag": "start-a", "color": "#c8860a" },
-    { "name": "Team Bravo",   "start_tag": "start-b", "color": "#1a4a80" },
-    { "name": "Team Charlie", "start_tag": "start-c", "color": "#2a7040" },
-    { "name": "Team Delta",   "start_tag": "start-d", "color": "#b03020" }
+    { "name": "Team Alpha",   "start_tag": "start-apple", "color": "#c8860a" },
+    { "name": "Team Bravo",   "start_tag": "start-bandana", "color": "#1a4a80" },
+    { "name": "Team Charlie", "start_tag": "start-capybara", "color": "#2a7040" },
+    { "name": "Team Delta",   "start_tag": "start-dragon", "color": "#b03020" }
   ],
 
   "trail_tags": [
-    { "id": "trail-1", "clue": "Well done! Now look somewhere cold... very cold." },
-    { "id": "trail-2", "clue": "Getting warmer! Check where the books live." },
-    { "id": "trail-3", "clue": "You're on fire! Find where people sit and relax." },
-    { "id": "trail-4", "clue": "Almost there! Look up high, near where you sleep." },
-    { "id": "trail-5", "clue": "🎉 You found the treasure! Claim your prize from the host." }
+    { "id": "rum", "clue": "The next clue is nice and warm." },
+    { "id": "candle", "clue": "meow." },
+    { "id": "cat", "clue": "I often come in twelves." },
+    { "id": "eggs", "clue": "Ribbed for your discomfort." },
+    { "id": "roller", "clue": "Look under the right bonsai candle." },
+    { "id": "left-bonsai-candle", "clue": "Where you might look on April 25th." },
+    { "id": "coathook", "clue": "This won't be getting much action tomorrow." },
+    { "id": "letterbox", "clue": "Almost there! You can feel a pull towards your gold medal." },
+    { "id": "coin", "clue": "Finish 🎉" }
   ],
 
-  "red_herring_tags": ["red-1", "red-2", "red-3", "red-4", "red-5"],
+  "red_herring_tags": ["right-bonsai-candle", "candle-holder", "coaster", "salt", "cat-bad", "lamp", "cow"],
 
   "start_clues": {
-    "start-a": "Alpha team — your hunt begins! First clue: find something that keeps things cold.",
-    "start-b": "Bravo team — your hunt begins! First clue: find something that keeps things cold.",
-    "start-c": "Charlie team — your hunt begins! First clue: find something that keeps things cold.",
-    "start-d": "Delta team — your hunt begins! First clue: find something that keeps things cold."
+    "start-apple": "Walk don't rum to the first clue.",
+    "start-bandana": "Walk don't rum to the first clue.",
+    "start-capybara": "Walk don't rum to the first clue.",
+    "start-dragon": "Walk don't rum to the first clue."
   }
 }
 </script>
@@ -287,7 +291,7 @@ try {
 }
 
 // Normalise
-CFG.penalty_seconds  = CFG.penalty_seconds  || 60;
+CFG.penalty_seconds  = CFG.penalty_seconds  || 120;
 CFG.red_herring_tags = CFG.red_herring_tags || [];
 CFG.start_clues      = CFG.start_clues      || {};
 
@@ -387,7 +391,7 @@ function handleScan(tagId) {
     saveRun(run);   // ← persisted immediately
     rScan({ icon:'🚨', ic:'shake', ttl:'WRONG TAG!', tc:'red',
       tagId, team:teams[run.teamIdx].name,
-      clue:"That's a decoy! Keep searching…",
+      clue:"Nope, not that one.",
       pen:penalty, timer:true });
     startTick();
     return;
