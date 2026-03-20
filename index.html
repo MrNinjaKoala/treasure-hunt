@@ -4,6 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Treasure Hunt</title>
+
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║                  ✏️  EDIT YOUR CONFIG HERE                   ║
+║  This is the only section you need to touch.                 ║
+║  Save the file and push to GitHub — that's it.               ║
+╚══════════════════════════════════════════════════════════════╝
+-->
+<script id="hunt-config" type="application/json">
+{
+  "penalty_seconds": 60,
+
+  "teams": [
+    { "name": "Team Alpha",   "start_tag": "start-a", "color": "#c8860a" },
+    { "name": "Team Bravo",   "start_tag": "start-b", "color": "#1a4a80" },
+    { "name": "Team Charlie", "start_tag": "start-c", "color": "#2a7040" },
+    { "name": "Team Delta",   "start_tag": "start-d", "color": "#b03020" }
+  ],
+
+  "trail_tags": [
+    { "id": "trail-1", "clue": "Well done! Now look somewhere cold... very cold." },
+    { "id": "trail-2", "clue": "Getting warmer! Check where the books live." },
+    { "id": "trail-3", "clue": "You're on fire! Find where people sit and relax." },
+    { "id": "trail-4", "clue": "Almost there! Look up high, near where you sleep." },
+    { "id": "trail-5", "clue": "🎉 You found the treasure! Claim your prize from the host." }
+  ],
+
+  "red_herring_tags": ["red-1", "red-2", "red-3", "red-4", "red-5"],
+
+  "start_clues": {
+    "start-a": "Alpha team — your hunt begins! First clue: find something that keeps things cold.",
+    "start-b": "Bravo team — your hunt begins! First clue: find something that keeps things cold.",
+    "start-c": "Charlie team — your hunt begins! First clue: find something that keeps things cold.",
+    "start-d": "Delta team — your hunt begins! First clue: find something that keeps things cold."
+  }
+}
+</script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500;600&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -53,6 +91,13 @@ body::before{
 .btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
 .btn-sm{padding:8px 16px;font-size:13px;}
 
+input,select{background:var(--paper);border:2px solid var(--border);border-radius:2px;
+  color:var(--ink);font-family:var(--ff-body);font-size:14px;
+  padding:9px 12px;width:100%;outline:none;transition:border-color .15s;}
+input:focus{border-color:var(--gold);}
+label{font-size:11px;font-family:var(--ff-mono);letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+
 .hint{background:var(--paper2);border-left:4px solid var(--gold);
   padding:11px 13px;font-size:13px;color:var(--muted);line-height:1.7;}
 .hint strong{color:var(--ink);}
@@ -61,17 +106,6 @@ body::before{
   text-transform:uppercase;color:var(--muted);
   display:flex;align-items:center;gap:8px;margin-bottom:14px;}
 .sec-label::before,.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
-
-/* ── LOADING ── */
-#loading-screen{align-items:center;justify-content:center;gap:16px;}
-.load-title{font-family:var(--ff-display);font-size:clamp(38px,10vw,64px);color:var(--gold);line-height:1;}
-.load-sub{font-family:var(--ff-mono);font-size:13px;letter-spacing:2px;color:var(--muted);}
-.load-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--gold);
-  border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.load-error{background:var(--paper2);border:2px solid var(--red);border-radius:2px;
-  padding:16px 20px;max-width:360px;text-align:center;color:var(--red);font-size:14px;line-height:1.7;}
-.load-error strong{display:block;font-family:var(--ff-display);font-size:20px;margin-bottom:6px;}
 
 /* ── PLAYER SCAN ── */
 .ps{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -148,13 +182,7 @@ body::before{
 .dtc-time.done{color:var(--green);}
 .dtc-body{display:none;padding:12px 15px;border-top:1px dashed var(--border);background:var(--paper);}
 .dtc.open .dtc-body{display:block;}
-.two-col-sm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-input,select{background:var(--paper);border:2px solid var(--border);border-radius:2px;
-  color:var(--ink);font-family:var(--ff-body);font-size:14px;
-  padding:9px 12px;width:100%;outline:none;transition:border-color .15s;}
-input:focus{border-color:var(--gold);}
-label{font-size:11px;font-family:var(--ff-mono);letter-spacing:1.5px;
-  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .lb-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
 .lb-pos{font-family:var(--ff-display);font-size:30px;color:var(--border);width:38px;text-align:center;flex-shrink:0;}
 .lb-pos.p1{color:#c8860a;}.lb-pos.p2{color:#888;}.lb-pos.p3{color:#a07040;}
@@ -170,22 +198,13 @@ label{font-size:11px;font-family:var(--ff-mono);letter-spacing:1.5px;
 .card{background:var(--paper2);border:2px solid var(--border);border-radius:2px;
   padding:16px 18px;box-shadow:3px 3px 0 var(--border);}
 
-.mt6{margin-top:6px;}.mt8{margin-top:8px;}.mt10{margin-top:10px;}
-.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}
-.flex{display:flex;}.gap8{gap:8px;}.gap10{gap:10px;}
+.mt6{margin-top:6px;}.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}
+.flex{display:flex;}.gap8{gap:8px;}
 .items-center{align-items:center;}.jb{justify-content:space-between;}
-.text-muted{color:var(--muted);}.text-sm{font-size:13px;}.w100{width:100%;}
+.text-muted{color:var(--muted);}.text-sm{font-size:13px;}
 </style>
 </head>
 <body>
-
-<!-- ══ LOADING ══ -->
-<div id="loading-screen" class="screen active">
-  <div class="load-title">THE HUNT</div>
-  <div class="load-spinner" id="load-spinner"></div>
-  <div class="load-sub" id="load-sub">Loading config…</div>
-  <div class="load-error" id="load-error" style="display:none"></div>
-</div>
 
 <!-- ══ SCAN SCREEN ══ -->
 <div id="scan-screen" class="screen">
@@ -248,7 +267,7 @@ label{font-size:11px;font-family:var(--ff-mono);letter-spacing:1.5px;
   <div id="dp2" class="dp">
     <div class="sec-label">NFC Tag URLs</div>
     <p class="text-sm text-muted" style="margin-bottom:14px;line-height:1.65">
-      Write these URLs to your NFC stickers using any free NFC writer app (e.g. NFC Tools).
+      Write these URLs to your NFC stickers using a free NFC writer app (e.g. NFC Tools).
     </p>
     <div id="urls-ui"></div>
   </div>
@@ -256,262 +275,103 @@ label{font-size:11px;font-family:var(--ff-mono);letter-spacing:1.5px;
 
 <script>
 // ══════════════════════════════════════════════════════
-//  SCORES KEY — persisted across page loads
+//  LOAD CONFIG from the embedded <script> block above
 // ══════════════════════════════════════════════════════
-const SCORE_KEY = 'hunt_scores_v1';
-const RUN_KEY   = 'hunt_run_v1';     // active run for THIS device
-
-// ══════════════════════════════════════════════════════
-//  TINY YAML PARSER
-//  Handles the subset used in config.yaml:
-//  strings, numbers, lists, mappings, comments, indented blocks
-// ══════════════════════════════════════════════════════
-function parseYaml(text) {
-  // Strip comments, split lines
-  const lines = text.split('\n');
-
-  function parseLine(line) {
-    const m = line.match(/^(\s*)(- )?([\w_"'-][^:]*?)?\s*:\s*(.*)$/);
-    return m;
-  }
-
-  // Build a simple token list: {indent, key, value, isList}
-  const tokens = [];
-  for (let raw of lines) {
-    const line = raw.replace(/#.*$/, ''); // strip comments
-    if (!line.trim()) continue;
-    const indent = line.match(/^(\s*)/)[1].length;
-    const stripped = line.trim();
-
-    if (stripped.startsWith('- ')) {
-      // list item that is a plain scalar
-      const val = stripped.slice(2).trim().replace(/^["']|["']$/g, '');
-      tokens.push({ indent, isList: true, key: null, value: val });
-    } else if (stripped.match(/^- \w+\s*:/)) {
-      // list item that starts a mapping
-      const inner = stripped.slice(2);
-      const ci = inner.indexOf(':');
-      const k = inner.slice(0, ci).trim();
-      const v = inner.slice(ci + 1).trim().replace(/^["']|["']$/g, '');
-      tokens.push({ indent, isList: true, key: k, value: v || null });
-    } else if (stripped.match(/^[\w_"'-].*:/)) {
-      const ci = stripped.indexOf(':');
-      const k = stripped.slice(0, ci).trim().replace(/^["']|["']$/g, '');
-      const v = stripped.slice(ci + 1).trim().replace(/^["']|["']$/g, '');
-      tokens.push({ indent, isList: false, key: k, value: v || null });
-    }
-  }
-
-  // Now build object recursively
-  let pos = 0;
-
-  function readValue(baseIndent) {
-    // peek ahead to see what we have
-    if (pos >= tokens.length) return null;
-    const next = tokens[pos];
-
-    if (next.indent <= baseIndent) return null;
-
-    // Is it a list?
-    if (next.isList) {
-      const arr = [];
-      while (pos < tokens.length && tokens[pos].indent > baseIndent && tokens[pos].isList) {
-        const t = tokens[pos];
-        if (t.key !== null) {
-          // mapping list item — gather siblings at same indent
-          const obj = {};
-          const itemIndent = t.indent;
-          // consume this first key
-          pos++;
-          obj[t.key] = t.value !== null ? castVal(t.value) : readValue(itemIndent);
-          // consume further keys at deeper indent belonging to this object
-          while (pos < tokens.length && tokens[pos].indent > itemIndent && !tokens[pos].isList) {
-            const sub = tokens[pos]; pos++;
-            obj[sub.key] = sub.value !== null ? castVal(sub.value) : readValue(sub.indent);
-          }
-          arr.push(obj);
-        } else {
-          arr.push(castVal(t.value));
-          pos++;
-        }
-      }
-      return arr;
-    }
-
-    // It's a mapping
-    const obj = {};
-    while (pos < tokens.length && tokens[pos].indent > baseIndent && !tokens[pos].isList) {
-      const t = tokens[pos]; pos++;
-      if (t.value !== null && t.value !== '') {
-        obj[t.key] = castVal(t.value);
-      } else {
-        obj[t.key] = readValue(t.indent);
-      }
-    }
-    return obj;
-  }
-
-  function castVal(v) {
-    if (v === 'true') return true;
-    if (v === 'false') return false;
-    if (v === 'null' || v === '~') return null;
-    if (/^\-?\d+$/.test(v)) return parseInt(v);
-    if (/^\-?\d*\.\d+$/.test(v)) return parseFloat(v);
-    return v;
-  }
-
-  // Kick off at indent -1 so everything qualifies
-  const result = {};
-  while (pos < tokens.length) {
-    const t = tokens[pos];
-    if (t.isList) { pos++; continue; } // top-level list items are odd, skip
-    pos++;
-    if (t.value !== null && t.value !== '') {
-      result[t.key] = castVal(t.value);
-    } else {
-      result[t.key] = readValue(t.indent);
-    }
-  }
-  return result;
+let CFG;
+try {
+  CFG = JSON.parse(document.getElementById('hunt-config').textContent);
+} catch(e) {
+  document.body.innerHTML = `<div style="padding:40px;font-family:monospace;color:#b03020;background:#fdf6e3;min-height:100vh">
+    <h2>⚠ Config Error</h2><p style="margin-top:12px">Could not parse the config block at the top of index.html:</p>
+    <pre style="margin-top:10px;background:#f5ead0;padding:12px;border-radius:4px">${e.message}</pre>
+    <p style="margin-top:12px">Check the JSON inside the &lt;script id="hunt-config"&gt; block.</p>
+  </div>`;
+  throw e;
 }
 
-// ══════════════════════════════════════════════════════
-//  CONFIG — loaded from config.yaml
-// ══════════════════════════════════════════════════════
-let CFG = null; // populated after fetch
-
-async function loadConfig() {
-  setLoadMsg('Loading config.yaml…');
-  try {
-    const res = await fetch('./config.yaml?nocache=' + Date.now());
-    if (!res.ok) throw new Error(`HTTP ${res.status} — make sure config.yaml is in the same folder as index.html`);
-    const text = await res.text();
-    CFG = parseYaml(text);
-    validateConfig(CFG);
-    return true;
-  } catch (e) {
-    showLoadError(e.message);
-    return false;
-  }
-}
-
-function validateConfig(c) {
-  if (!c.teams || !Array.isArray(c.teams) || c.teams.length === 0) throw new Error('config.yaml: "teams" list is missing or empty');
-  if (!c.trail_tags || !Array.isArray(c.trail_tags) || c.trail_tags.length === 0) throw new Error('config.yaml: "trail_tags" list is missing or empty');
-  for (const t of c.teams) {
-    if (!t.name) throw new Error('config.yaml: a team is missing "name"');
-    if (!t.start_tag) throw new Error('config.yaml: a team is missing "start_tag"');
-  }
-  // normalise
-  c.penalty_seconds = c.penalty_seconds || 60;
-  c.red_herring_tags = c.red_herring_tags || [];
-  c.start_clues = c.start_clues || {};
-}
-
-function setLoadMsg(m) { document.getElementById('load-sub').textContent = m; }
-function showLoadError(msg) {
-  document.getElementById('load-spinner').style.display = 'none';
-  document.getElementById('load-sub').style.display = 'none';
-  const el = document.getElementById('load-error');
-  el.style.display = '';
-  el.innerHTML = `<strong>⚠ Config Error</strong>${esc(msg)}<br><br>
-    <span style="font-size:12px">Check that <code>config.yaml</code> is in the same folder as <code>index.html</code> and that the YAML syntax is valid.</span>`;
-}
+// Normalise
+CFG.penalty_seconds  = CFG.penalty_seconds  || 60;
+CFG.red_herring_tags = CFG.red_herring_tags || [];
+CFG.start_clues      = CFG.start_clues      || {};
 
 // ══════════════════════════════════════════════════════
-//  SCORES — persisted in localStorage
+//  PERSISTENCE
+//  - RUN_KEY: the active run on THIS device (survives NFC tap page reloads)
+//  - SCORE_KEY: host's recorded final scores
 // ══════════════════════════════════════════════════════
-function getScores() {
-  try { const s = localStorage.getItem(SCORE_KEY); return s ? JSON.parse(s) : {}; } catch(e) { return {}; }
-}
-function saveScores(sc) { localStorage.setItem(SCORE_KEY, JSON.stringify(sc)); }
+const RUN_KEY   = 'hunt_run_v2';
+const SCORE_KEY = 'hunt_scores_v2';
+
+const getRun    = () => { try { const s=localStorage.getItem(RUN_KEY);   return s?JSON.parse(s):null; } catch(e){return null;} };
+const saveRun   = r  => { r===null ? localStorage.removeItem(RUN_KEY) : localStorage.setItem(RUN_KEY, JSON.stringify(r)); };
+const getScores = () => { try { const s=localStorage.getItem(SCORE_KEY); return s?JSON.parse(s):{};   } catch(e){return {};} };
+const saveScores= sc => localStorage.setItem(SCORE_KEY, JSON.stringify(sc));
 
 // ══════════════════════════════════════════════════════
-//  ACTIVE RUN — persisted in localStorage so NFC taps
-//  (which open new page loads) can resume the run state
-// ══════════════════════════════════════════════════════
-function getRun() {
-  try { const s = localStorage.getItem(RUN_KEY); return s ? JSON.parse(s) : null; } catch(e) { return null; }
-}
-function saveRun(run) {
-  if (run === null) localStorage.removeItem(RUN_KEY);
-  else localStorage.setItem(RUN_KEY, JSON.stringify(run));
-}
-
-// ══════════════════════════════════════════════════════
-//  ROUTING
+//  ROUTING  — reads ?tag= or ?host=1 from the URL
 // ══════════════════════════════════════════════════════
 const gp = k => new URLSearchParams(location.search).get(k);
 
-window.addEventListener('load', async () => {
-  const ok = await loadConfig();
-  if (!ok) return;
-
+window.addEventListener('load', () => {
   const tag  = gp('tag');
   const host = gp('host');
-
-  if (tag) {
-    handleScan(tag);
-  } else if (host === '1') {
-    goDash();
-  } else {
-    // No params — if there's an active run resume the timer, else go to dashboard
+  if      (tag)        handleScan(tag);
+  else if (host==='1') goDash();
+  else {
+    // No params: resume active run if one exists, otherwise show dashboard
     const run = getRun();
-    if (run) {
-      resumeRun(run);
-    } else {
-      goDash();
-    }
+    if (run) resumeRun(run);
+    else     goDash();
   }
 });
 
 // ══════════════════════════════════════════════════════
-//  SCREEN HELPERS
+//  SCREENS
 // ══════════════════════════════════════════════════════
-const show = id => {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-};
+const show  = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
 const goDash = () => { renderDash(); show('dashboard-screen'); };
 
 function dtab(i) {
-  document.querySelectorAll('.dtab').forEach((t,j) => t.classList.toggle('on', i===j));
-  document.querySelectorAll('.dp').forEach((p,j) => p.classList.toggle('on', i===j));
+  document.querySelectorAll('.dtab').forEach((t,j)=>t.classList.toggle('on',i===j));
+  document.querySelectorAll('.dp'  ).forEach((p,j)=>p.classList.toggle('on',i===j));
   if (i===1) renderLb();
   if (i===2) renderUrls();
 }
 
 // ══════════════════════════════════════════════════════
 //  SCAN HANDLER
-//  *** Key fix: run state lives in localStorage, NOT in JS memory ***
+//  Run state is saved to localStorage immediately on every
+//  state change, so it survives the fresh page load that
+//  each NFC tap triggers.
 // ══════════════════════════════════════════════════════
 function handleScan(tagId) {
   clearInterval(window._tick);
 
-  const teams    = CFG.teams;
-  const trail    = CFG.trail_tags;
-  const reds     = CFG.red_herring_tags;
-  const penalty  = CFG.penalty_seconds;
+  const teams   = CFG.teams;
+  const trail   = CFG.trail_tags;   // array of {id, clue} or plain strings
+  const reds    = CFG.red_herring_tags;
+  const penalty = CFG.penalty_seconds;
+
+  const trailId  = t => typeof t==='string' ? t : t.id;
+  const trailClue= t => typeof t==='string' ? null : (t.clue||null);
 
   const teamIdx  = teams.findIndex(t => t.start_tag === tagId);
-  const trailIdx = trail.findIndex(t => (typeof t === 'string' ? t : t.id) === tagId);
-  const trailId  = (t) => typeof t === 'string' ? t : t.id;
-  const trailClue= (t) => typeof t === 'string' ? null : (t.clue || null);
+  const trailIdx = trail.findIndex(t => trailId(t) === tagId);
   const isRed    = reds.includes(tagId);
-  const isFin    = trailIdx === trail.length - 1 && trailIdx >= 0;
+  const isFin    = trailIdx !== -1 && trailIdx === trail.length - 1;
 
   // ── START TAG ──
   if (teamIdx !== -1) {
     const run = { teamIdx, startMs: Date.now(), penSecs: 0, penCount: 0, hits: 0 };
     saveRun(run);
     const clue = CFG.start_clues[tagId] || `${teams[teamIdx].name} — your hunt begins! Find the first trail tag.`;
-    rScan({ icon:'🚀', ic:'pop', ttl:'HUNT STARTS NOW', tc:'gold', tagId,
-      team:'▶ ' + teams[teamIdx].name, clue, timer:true });
+    rScan({ icon:'🚀', ic:'pop', ttl:'HUNT STARTS NOW', tc:'gold',
+      tagId, team:'▶ '+teams[teamIdx].name, clue, timer:true });
     startTick();
     return;
   }
 
-  // ── ALL OTHER TAGS need an active run ──
+  // Everything else requires an active run on this device
   let run = getRun();
 
   if (!run) {
@@ -527,11 +387,11 @@ function handleScan(tagId) {
   if (isRed) {
     run.penSecs  += penalty;
     run.penCount += 1;
-    saveRun(run);
-    rScan({ icon:'🚨', ic:'shake', ttl:'WRONG TAG!', tc:'red', tagId,
-      team: teams[run.teamIdx].name,
+    saveRun(run);   // ← persisted immediately
+    rScan({ icon:'🚨', ic:'shake', ttl:'WRONG TAG!', tc:'red',
+      tagId, team:teams[run.teamIdx].name,
       clue:"That's a decoy! Keep searching…",
-      pen: penalty, timer:true });
+      pen:penalty, timer:true });
     startTick();
     return;
   }
@@ -539,8 +399,8 @@ function handleScan(tagId) {
   // ── FINISH TAG ──
   if (isFin) {
     const rawSecs = Math.floor((Date.now() - run.startMs) / 1000);
-    const result  = { rawSecs, penSecs: run.penSecs, penCount: run.penCount, hits: run.hits + 1 };
-    saveRun(null); // clear the run
+    const result  = { rawSecs, penSecs:run.penSecs, penCount:run.penCount, hits:run.hits+1 };
+    saveRun(null);  // clear run
     showFin(run.teamIdx, result);
     return;
   }
@@ -548,59 +408,54 @@ function handleScan(tagId) {
   // ── MID-TRAIL TAG ──
   if (trailIdx !== -1) {
     run.hits += 1;
-    saveRun(run);
+    saveRun(run);   // ← persisted immediately
     const clue = trailClue(trail[trailIdx]) || 'Good find! Keep going — the next tag awaits…';
-    rScan({ icon:'✅', ic:'pop', ttl:'FOUND IT!', tc:'green', tagId,
-      team: teams[run.teamIdx].name, clue, timer:true });
+    rScan({ icon:'✅', ic:'pop', ttl:'FOUND IT!', tc:'green',
+      tagId, team:teams[run.teamIdx].name, clue, timer:true });
     startTick();
     return;
   }
 
   // ── UNKNOWN TAG ──
   rScan({ icon:'❓', ttl:'UNKNOWN TAG', tagId,
-    team:`Tag "${tagId}" is not in the config`,
-    clue:'This tag ID is not configured. Check config.yaml.',
-    timer: !!run });
+    team:`"${tagId}" is not in the config`,
+    clue:'This tag ID is not configured. Check the hunt-config block in index.html.',
+    timer:!!run });
   if (run) startTick();
 }
 
 function resumeRun(run) {
-  // Resuming after phone sleep / revisit — just show the running timer
   const teams = CFG.teams;
   rScan({ icon:'⏱', ttl:'HUNT IN PROGRESS', tc:'gold', tagId:'',
     team: teams[run.teamIdx]?.name || 'Unknown team',
-    clue:'Your hunt is still running. Keep scanning NFC tags!',
+    clue:'Your hunt is still running! Keep scanning NFC tags.',
     timer:true });
   startTick();
 }
 
 function rScan({ icon, ic='', ttl, tc='', tagId, team, clue, pen=0, timer }) {
   show('scan-screen');
-  document.getElementById('s-tagid').textContent = tagId ? 'TAG: ' + tagId : '';
-  const iEl = document.getElementById('s-icon');
-  iEl.textContent = icon; iEl.className = 'ps-icon' + (ic ? ' '+ic : '');
-  const tEl = document.getElementById('s-title');
-  tEl.textContent = ttl; tEl.className = 'ps-title' + (tc ? ' '+tc : '');
-  document.getElementById('s-team').textContent = team;
-  const cEl = document.getElementById('s-clue');
-  if (clue) { cEl.textContent = clue; cEl.style.display = ''; } else cEl.style.display = 'none';
-  const pEl = document.getElementById('pen-banner');
-  if (pen) { document.getElementById('pen-secs').textContent = pen; pEl.style.display = ''; }
-  else pEl.style.display = 'none';
-  document.getElementById('s-timer').style.display  = timer ? '' : 'none';
-  document.getElementById('s-tlabel').style.display = timer ? '' : 'none';
-  document.getElementById('s-acts').innerHTML =
+  document.getElementById('s-tagid').textContent = tagId ? 'TAG: '+tagId : '';
+  const iEl=document.getElementById('s-icon');   iEl.textContent=icon; iEl.className='ps-icon'+(ic?' '+ic:'');
+  const tEl=document.getElementById('s-title');  tEl.textContent=ttl;  tEl.className='ps-title'+(tc?' '+tc:'');
+  document.getElementById('s-team').textContent=team;
+  const cEl=document.getElementById('s-clue');
+  if(clue){cEl.textContent=clue;cEl.style.display='';}else cEl.style.display='none';
+  const pEl=document.getElementById('pen-banner');
+  if(pen){document.getElementById('pen-secs').textContent=pen;pEl.style.display='';}else pEl.style.display='none';
+  document.getElementById('s-timer').style.display =timer?'':'none';
+  document.getElementById('s-tlabel').style.display=timer?'':'none';
+  document.getElementById('s-acts').innerHTML=
     `<button class="btn btn-ghost" onclick="goDash()">📋 Host Dashboard</button>`;
 }
 
 function startTick() {
   clearInterval(window._tick);
   const tick = () => {
-    const run = getRun();
-    if (!run) return;
-    const elapsed = Math.floor((Date.now() - run.startMs) / 1000) + run.penSecs;
-    const el = document.getElementById('s-timer');
-    if (el) el.textContent = fmt(elapsed);
+    const run=getRun(); if(!run)return;
+    const e=Math.floor((Date.now()-run.startMs)/1000)+run.penSecs;
+    const el=document.getElementById('s-timer');
+    if(el) el.textContent=fmt(e);
   };
   tick();
   window._tick = setInterval(tick, 1000);
@@ -611,11 +466,10 @@ function startTick() {
 // ══════════════════════════════════════════════════════
 function showFin(teamIdx, run) {
   clearInterval(window._tick);
-  const total = run.rawSecs + run.penSecs;
-  const team  = CFG.teams[teamIdx];
-  document.getElementById('f-team').textContent  = team.name;
-  document.getElementById('f-total').textContent = fmt(total);
-  document.getElementById('f-breakdown').innerHTML = `
+  const total=run.rawSecs+run.penSecs;
+  document.getElementById('f-team').textContent =CFG.teams[teamIdx].name;
+  document.getElementById('f-total').textContent=fmt(total);
+  document.getElementById('f-breakdown').innerHTML=`
     <div class="fi-row"><span class="fi-label">Race time</span><span class="fi-val g">${fmt(run.rawSecs)}</span></div>
     <div class="fi-row"><span class="fi-label">Penalties (${run.penCount}×)</span><span class="fi-val r">+${fmt(run.penSecs)}</span></div>
     <div class="fi-row"><span class="fi-label">Tags found</span><span class="fi-val">${run.hits}</span></div>
@@ -623,50 +477,46 @@ function showFin(teamIdx, run) {
       <span class="fi-label" style="font-weight:700;color:var(--ink)">TOTAL</span>
       <span class="fi-val big">${fmt(total)}</span>
     </div>`;
-  document.getElementById('f-code').textContent = encR(teamIdx, run);
+  document.getElementById('f-code').textContent=encR(teamIdx,run);
   show('finish-screen');
 }
 
-const encR = (ti, run) =>
-  `T${ti}${(run.rawSecs + run.penSecs).toString(36).toUpperCase()}P${run.penCount}`;
-
-function decR(code) {
-  const m = code.trim().toUpperCase().match(/^T(\d)([0-9A-Z]+)P(\d+)$/);
-  if (!m) return null;
-  const ti = parseInt(m[1]), total = parseInt(m[2], 36), pc = parseInt(m[3]);
-  const penSecs = pc * CFG.penalty_seconds;
-  return { ti, total, rawSecs: total - penSecs, penSecs, pc };
+const encR=(ti,run)=>`T${ti}${(run.rawSecs+run.penSecs).toString(36).toUpperCase()}P${run.penCount}`;
+function decR(code){
+  const m=code.trim().toUpperCase().match(/^T(\d)([0-9A-Z]+)P(\d+)$/);
+  if(!m)return null;
+  const ti=parseInt(m[1]),total=parseInt(m[2],36),pc=parseInt(m[3]),penSecs=pc*CFG.penalty_seconds;
+  return{ti,total,rawSecs:total-penSecs,penSecs,pc};
 }
 
 // ══════════════════════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════════════════════
-function renderDash() { rScores(); }
+function renderDash(){ rScores(); }
 
-function rScores() {
-  const scores = getScores();
-  document.getElementById('score-ui').innerHTML = CFG.teams.map((t, i) => {
-    const sc = scores[i] || null;
-    const done = sc !== null;
+function rScores(){
+  const scores=getScores();
+  document.getElementById('score-ui').innerHTML=CFG.teams.map((t,i)=>{
+    const sc=scores[i]||null, done=sc!==null;
     return `<div class="dtc ${done?'done':''}" id="dtc${i}">
       <div class="dtc-head" onclick="tog(${i})">
         <div class="flex items-center" style="flex:1">
           <div class="dtc-dot" style="background:${t.color||'#888'}"></div>
           <div>
             <div class="dtc-name">${esc(t.name)}</div>
-            <div class="dtc-meta">${done ? `Total: ${fmt(sc.total)} · ${sc.pc} penalty` : 'Not recorded yet'}</div>
+            <div class="dtc-meta">${done?`Total: ${fmt(sc.total)} · ${sc.pc} penalty${sc.pc!==1?'s':''}`:'Not recorded yet'}</div>
           </div>
         </div>
-        <div class="dtc-time ${done?'done':''}">${done ? fmt(sc.total) : '—'}</div>
+        <div class="dtc-time ${done?'done':''}">${done?fmt(sc.total):'—'}</div>
       </div>
       <div class="dtc-body" id="body${i}">
         <label>Paste Result Code</label>
         <div class="flex gap8 mt6">
-          <input id="ci${i}" placeholder="e.g. T0ABCP2" style="font-family:var(--ff-mono);letter-spacing:2px">
+          <input id="ci${i}" placeholder="e.g. T0ABCP2" style="font-family:var(--ff-mono);letter-spacing:2px;text-transform:uppercase">
           <button class="btn btn-gold btn-sm" onclick="applyCode(${i})">Apply</button>
         </div>
         <div style="text-align:center;color:var(--muted);font-size:12px;margin:10px 0">— or enter manually —</div>
-        <div class="two-col-sm">
+        <div class="two-col">
           <div><label>Total Time (mm:ss)</label><input id="mt${i}" placeholder="05:42" value="${done?fmt(sc.total):''}"></div>
           <div><label>Penalty count</label><input type="number" id="mp${i}" min="0" placeholder="0" value="${done?sc.pc:''}"></div>
         </div>
@@ -679,49 +529,37 @@ function rScores() {
   }).join('');
 }
 
-function tog(i) { document.getElementById('dtc'+i).classList.toggle('open'); }
+function tog(i){ document.getElementById('dtc'+i).classList.toggle('open'); }
 
-function applyCode(i) {
-  const r = decR(document.getElementById('ci'+i).value);
-  if (!r) { alert('Invalid code — ask the team to read it again.'); return; }
-  if (r.ti !== i) {
-    if (!confirm(`This code is for ${CFG.teams[r.ti]?.name||'team '+r.ti}, not ${CFG.teams[i].name}. Apply anyway?`)) return;
-  }
-  const scores = getScores();
-  scores[i] = { total: r.total, rawSecs: r.rawSecs, penSecs: r.penSecs, pc: r.pc };
-  saveScores(scores); rScores();
+function applyCode(i){
+  const r=decR(document.getElementById('ci'+i).value);
+  if(!r){alert('Invalid code — ask the team to read it again.');return;}
+  if(r.ti!==i&&!confirm(`This code is for ${CFG.teams[r.ti]?.name||'team '+r.ti}, not ${CFG.teams[i].name}. Apply anyway?`))return;
+  const sc=getScores(); sc[i]={total:r.total,rawSecs:r.rawSecs,penSecs:r.penSecs,pc:r.pc};
+  saveScores(sc); rScores();
 }
 
-function saveMan(i) {
-  const t = parseTm(document.getElementById('mt'+i).value);
-  if (t < 0) { alert('Enter time as mm:ss (e.g. 05:42)'); return; }
-  const pc = parseInt(document.getElementById('mp'+i).value) || 0;
-  const penSecs = pc * CFG.penalty_seconds;
-  const scores = getScores();
-  scores[i] = { total: t, rawSecs: t - penSecs, penSecs, pc };
-  saveScores(scores); rScores();
+function saveMan(i){
+  const t=parseTm(document.getElementById('mt'+i).value);
+  if(t<0){alert('Enter time as mm:ss (e.g. 05:42)');return;}
+  const pc=parseInt(document.getElementById('mp'+i).value)||0;
+  const penSecs=pc*CFG.penalty_seconds;
+  const sc=getScores(); sc[i]={total:t,rawSecs:t-penSecs,penSecs,pc};
+  saveScores(sc); rScores();
   document.getElementById('dtc'+i).classList.remove('open');
 }
 
-function clrScore(i) {
-  const scores = getScores(); delete scores[i]; saveScores(scores); rScores();
-}
+function clrScore(i){ const sc=getScores(); delete sc[i]; saveScores(sc); rScores(); }
+function clearAll(){ if(!confirm('Clear all recorded scores?'))return; saveScores({}); rScores(); }
 
-function clearAll() {
-  if (!confirm('Clear all recorded scores?')) return;
-  saveScores({}); rScores();
-}
-
-function renderLb() {
-  const scores = getScores();
-  const done = CFG.teams
-    .map((t, i) => scores[i] ? { ...scores[i], name: t.name, color: t.color } : null)
-    .filter(Boolean)
-    .sort((a, b) => a.total - b.total);
-  const el = document.getElementById('lb-ui');
-  if (!done.length) { el.innerHTML = '<div class="empty">No scores recorded yet.</div>'; return; }
-  const pc = ['p1','p2','p3'];
-  el.innerHTML = done.map((t, i) => `
+function renderLb(){
+  const scores=getScores();
+  const done=CFG.teams.map((t,i)=>scores[i]?{...scores[i],name:t.name,color:t.color}:null)
+    .filter(Boolean).sort((a,b)=>a.total-b.total);
+  const el=document.getElementById('lb-ui');
+  if(!done.length){el.innerHTML='<div class="empty">No scores recorded yet.</div>';return;}
+  const pc=['p1','p2','p3'];
+  el.innerHTML=done.map((t,i)=>`
     <div class="lb-row">
       <div class="lb-pos ${pc[i]||''}">${i+1}</div>
       <div class="lb-nm">
@@ -733,28 +571,23 @@ function renderLb() {
       </div>
       <div class="lb-t">${fmt(t.total)}</div>
     </div>`).join('');
-  const waiting = CFG.teams.map((t,i) => scores[i] ? null : t.name).filter(Boolean);
-  if (waiting.length)
-    el.innerHTML += `<div class="text-sm text-muted mt12" style="font-style:italic">Still waiting: ${waiting.map(esc).join(', ')}</div>`;
+  const waiting=CFG.teams.map((t,i)=>scores[i]?null:t.name).filter(Boolean);
+  if(waiting.length) el.innerHTML+=`<div class="text-sm text-muted mt12" style="font-style:italic">Still waiting: ${waiting.map(esc).join(', ')}</div>`;
 }
 
-function renderUrls() {
-  const base = location.href.split('?')[0].replace(/\/$/, '');
-  const rows = [
-    ...CFG.teams.map(t => ({ label:`START — ${t.name}`, tag: t.start_tag, type:'start' })),
-    ...CFG.trail_tags.map((t,i) => {
-      const id = typeof t==='string' ? t : t.id;
-      const fin = i===CFG.trail_tags.length-1;
-      return { label: fin ? `FINISH — ${id}` : `Trail ${i+1} — ${id}`, tag:id, type:fin?'finish':'trail' };
-    }),
-    ...CFG.red_herring_tags.map(tag => ({ label:`Red Herring — ${tag}`, tag, type:'red' }))
+function renderUrls(){
+  const base=location.href.split('?')[0].replace(/\/$/,'');
+  const trail=CFG.trail_tags;
+  const trailId=t=>typeof t==='string'?t:t.id;
+  const rows=[
+    ...CFG.teams.map(t=>({label:`START — ${t.name}`,tag:t.start_tag,type:'start'})),
+    ...trail.map((t,i)=>{const id=trailId(t),fin=i===trail.length-1;return{label:fin?`FINISH — ${id}`:`Trail ${i+1} — ${id}`,tag:id,type:fin?'finish':'trail'};}),
+    ...CFG.red_herring_tags.map(tag=>({label:`Red Herring — ${tag}`,tag,type:'red'}))
   ];
-  document.getElementById('urls-ui').innerHTML = rows.map(r => `
+  document.getElementById('urls-ui').innerHTML=rows.map(r=>`
     <div class="card mt8">
       <div class="flex items-center jb gap8">
-        <span class="stamp s-${r.type==='finish'?'finish':r.type==='start'?'start':r.type==='trail'?'trail':'red'}">
-          ${r.type.toUpperCase()}
-        </span>
+        <span class="stamp s-${r.type==='finish'?'finish':r.type==='start'?'start':r.type==='trail'?'trail':'red'}">${r.type.toUpperCase()}</span>
         <span style="font-weight:600;font-size:13px;flex:1">${esc(r.label)}</span>
         <button class="btn btn-ghost btn-sm" onclick="cp('${base}?tag=${r.tag}')">Copy</button>
       </div>
@@ -765,14 +598,11 @@ function renderUrls() {
 // ══════════════════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════════════════
-const fmt = s => {
-  const v = Math.max(0, Math.round(s)), m = Math.floor(v/60), h = Math.floor(m/60);
-  return h > 0 ? `${h}:${pad(m%60)}:${pad(v%60)}` : `${pad(m)}:${pad(v%60)}`;
-};
-const pad = n => String(n).padStart(2, '0');
-const parseTm = s => { const m = s.match(/^(\d+):(\d{1,2})$/); return m ? parseInt(m[1])*60+parseInt(m[2]) : -1; };
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const cp  = t => navigator.clipboard.writeText(t).then(()=>alert('Copied!')).catch(()=>prompt('Copy this URL:',t));
+const fmt=s=>{const v=Math.max(0,Math.round(s)),m=Math.floor(v/60),h=Math.floor(m/60);return h>0?`${h}:${pad(m%60)}:${pad(v%60)}`:`${pad(m)}:${pad(v%60)}`;};
+const pad=n=>String(n).padStart(2,'0');
+const parseTm=s=>{const m=s.match(/^(\d+):(\d{1,2})$/);return m?parseInt(m[1])*60+parseInt(m[2]):-1;};
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const cp=t=>navigator.clipboard.writeText(t).then(()=>alert('Copied!')).catch(()=>prompt('Copy this URL:',t));
 </script>
 </body>
 </html>
